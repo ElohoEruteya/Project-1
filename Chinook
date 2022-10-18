@@ -1,0 +1,103 @@
+USING PROBLEM STATEMENT 1
+-query that returns each genre with the number of tracks sold in the USA(IN ABSOLUTE NUMBERS & PERCENTAGE)-
+
+SELECT Genre_Name, Number_of_Tracks_Sold, ROUND (Number_of_Tracks_Sold*100/
+					(SELECT SUM(Number_of_Tracks_Sold)
+					 FROM (SELECT CG.Genre_Name, COUNT(CT.Track_Id) AS Number_of_Tracks_Sold
+FROM Chinook.Genre AS CG
+JOIN Chinook.Track AS CT ON CG.Genre_Id = CT.Genre_Id
+JOIN Chinook.Invoice_Line AS CIL ON CT.Track_Id = CIL.Track_Id
+JOIN Chinook.Invoice AS CI ON CI.Invoice_Id = CIL.Invoice_id
+WHERE CI.Billing_Country ILIKE 'USA' 
+GROUP BY 1
+ORDER BY 2 DESC) SUB2))
+FROM(
+SELECT  CG.Genre_Name, COUNT(CT.Track_Id) AS Number_of_Tracks_Sold 
+FROM Chinook.Genre AS CG
+INNER JOIN Chinook.Track AS CT ON CG.Genre_Id = CT.Genre_Id
+INNER JOIN Chinook.Invoice_Line AS CIL ON CT.Track_Id = CIL.Track_Id
+INNER JOIN Chinook.Invoice AS CI ON CI.Invoice_Id = CIL.Invoice_id
+WHERE CI.Billing_Country ILIKE 'USA' 
+GROUP BY 1
+ORDER BY 2 DESC) SUB1;
+																	  																	  
+-query that finds the three artists whose albums we should purchase for the store based on sales of tracks from their genres-
+
+SELECT CI.Billing_Country, CG.Genre_Name, SUM(CI.Total) AS Total_Sales
+From Chinook.Genre AS CG
+INNER JOIN Chinook.Track AS CT ON CG.Genre_Id = CT.Genre_Id
+INNER JOIN Chinook.Invoice_Line AS CIL ON CT.Track_Id = CIL.Track_Id
+INNER JOIN Chinook.Invoice AS CI ON CI.Invoice_Id = CIL.Invoice_Id
+INNER JOIN Chinook.Album AS CAL ON CAL.Album_Id = CT.Album_Id
+INNER JOIN Chinook.Artist AS CAR ON CAR.Artist_Id = CAL.Artist_Id 
+WHERE CI.Billing_Country = 'USA' AND (CG.GENRE_Name LIKE '%Punk%' 
+								 OR CG.GENRE_Name like 'Pop' 
+								OR CG.GENRE_Name LIKE 'Hip Hop%'
+								OR CG.GENRE_Name LIKE 'Blues')
+GROUP BY 1,2
+ORDER BY 3 DESC;
+
+
+
+USING PROBLEM STATEMENT 2
+-query that finds the total dollar amount of sales assigned to each sales support agent within the company-
+
+SELECT CE.First_Name,CE.Last_Name,CE.Title, CE.Hire_date,CE.City, SUM(CI.Total) AS Total_Sales
+From Chinook.Employee AS CE
+INNER JOIN Chinook.Customer AS CC ON CE.Employee_Id = CC.Support_repid
+INNER JOIN Chinook.Invoice AS CI ON CC.Customer_Id = CI.Customer_Id
+GROUP BY 1,2,3,4,5
+ORDER BY 6 DESC;
+
+-query that finds the total number of customers-
+
+SELECT CC.Country, COUNT(DISTINCT(CI.customer_id))
+FROM Chinook.Customer AS CC
+JOIN Chinook.Invoice AS CI ON CC.Customer_id = CI.Customer_id
+GROUP BY 1
+ORDER BY 2 DESC;
+
+-query that finds the total value of sales-
+SELECT CC.Country, COUNT(CC.Customer_Id)AS Total_Number_of_Customers, SUM(CI.Total) AS Total_Value_Of_Sales
+FROM Chinook.Customer AS CC
+JOIN Chinook.Invoice AS CI ON CC.Customer_id = CI.Customer_id
+GROUP BY 1
+ORDER BY 2 DESC;
+
+-query that finds the average value of sales per customer-
+SELECT CC.Country, COUNT(DISTINCT(CI.Customer_Id))AS Total_Number_of_Customers, SUM(CI.Total) AS Total_Value_Of_Sales, SUM(CI.Total)/COUNT(DISTINCT(CI.Customer_Id)) AS Average_Sales_Per_Customer
+FROM Chinook.Customer AS CC
+JOIN Chinook.Invoice AS CI ON CC.Customer_id = CI.Customer_id
+GROUP BY 1
+ORDER BY 2 DESC;
+
+
+-query that finds the average order value-
+SELECT CC.Country, COUNT(DISTINCT(CI.Customer_Id))AS Total_Number_of_Customers, SUM(CIL.quantity)/COUNT(DISTINCT(CI.Customer_Id)) AS Average_Order_Per_Customer
+FROM Chinook.Customer AS CC
+JOIN Chinook.Invoice AS CI ON CC.Customer_id = CI.Customer_id
+JOIN Chinook.Invoice_line AS CIL ON CI.Invoice_id = CIL.Invoice_id
+GROUP BY 1
+ORDER BY 3 ASC;
+
+
+
+USING PROBLEM STATEMENT 3
+-query that categorizes each invoice as either an album purchase or not, and calculates the following summary statistics: (number of invoices & percentage of invoices)---------(A where clause is missing)
+
+SELECT  CI.Invoice_Id,CAL.Album_Id,CAL.Album_Title, COUNT(CT.Track_Id) As Number_Of_Tracks_In_The_Album
+FROM Chinook.Album AS CAL
+JOIN Chinook.Track AS CT ON CAL.Album_Id = CT.Album_Id
+JOIN Chinook.Invoice_Line AS CIL ON CT.Track_Id = CIL.Track_Id
+JOIN Chinook.Invoice AS CI ON CI.Invoice_Id = CIL.Invoice_Id
+GROUP BY 1,2,3
+ORDER BY 4 DESC
+
+-query that finds number of tracks in  each album-
+SELECT CAL.Album_Id,CAL.Album_Title, COUNT(CT.Track_Id) As Number_Of_Tracks_In_The_Album
+FROM Chinook.Album AS CAL
+JOIN Chinook.Track AS CT ON CAL.Album_Id = CT.Album_Id
+GROUP BY 1,2
+ORDER BY 3 DESC
+
+
